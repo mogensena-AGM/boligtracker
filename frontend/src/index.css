@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #0F1419;
+  color: #e2e8f0;
+  font-family: system-ui, -apple-system, sans-serif;
+}

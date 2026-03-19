@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Environment
+.env
+.env.local
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+
+# Logs
+logs/
+*.log
+
+# Claude Code
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Samples (raw API responses, not needed in repo)
+samples/
