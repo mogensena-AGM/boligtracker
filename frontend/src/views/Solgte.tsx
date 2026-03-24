@@ -36,11 +36,6 @@ const PERIODS: Record<string, number> = { '3 mdr': 3, '6 mdr': 6, '1 år': 12, '
 
 const fmt = (n: number) => n?.toLocaleString('da-DK')
 
-function median(arr: number[]) {
-  if (!arr.length) return 0
-  const s = [...arr].sort((a, b) => a - b)
-  return s[Math.floor(s.length / 2)]
-}
 
 export default function Solgte() {
   const [records, setRecords] = useState<SoldRecord[]>([])
@@ -263,7 +258,7 @@ export default function Solgte() {
             <Tooltip
               contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 8 }}
               labelStyle={{ color: '#94a3b8' }}
-              formatter={(v: number, name: string) => [fmt(v) + ' kr/m²', name]} />
+              formatter={(v, name) => [fmt(v as number) + ' kr/m²', name as string]} />
             <Legend wrapperStyle={{ fontSize: 12, color: '#94a3b8' }} />
             {areaKeys.flatMap((key, i) => [
               <Line key={key} type="monotone" dataKey={key} stroke={AREA_COLORS[i % AREA_COLORS.length]}
