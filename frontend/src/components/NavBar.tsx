@@ -47,6 +47,7 @@ export default function NavBar() {
         <span className="text-[#3ECFA0] font-bold text-lg mr-3">BoligTracker</span>
         <NavLink to="/til-salg" className={linkClass}>Til salg</NavLink>
         <NavLink to="/solgte" className={linkClass}>Solgte</NavLink>
+        <NavLink to="/liggetid" className={linkClass}>Liggetid</NavLink>
         <NavLink to="/vores-lejlighed" className={linkClass}>Vores lejlighed</NavLink>
       </div>
       <div className="flex items-center gap-2 text-xs text-slate-400">

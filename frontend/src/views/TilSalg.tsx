@@ -53,6 +53,7 @@ export default function TilSalg() {
       .from('listings')
       .select('id,street,zip_code,rooms,size,price,sqm_price,days_for_sale,energy_class,floor')
       .eq('is_active', true)
+      .neq('zip_code', 2900)
       .then(({ data, error }) => {
         if (error) setError(error.message)
         else setListings(data || [])
@@ -152,25 +153,37 @@ const filtered = useMemo(() => listings.filter(l => {
           </div>
 
           {/* Price */}
-          <div className="flex-1 min-w-48">
+          <div className="flex-1 min-w-56">
             <label className="text-xs text-slate-400 uppercase tracking-wider block mb-2">
               Pris: {fmt(filters.minPrice)} – {fmt(filters.maxPrice)} kr
             </label>
-            <input type="range" min={0} max={20_000_000} step={250_000}
-              value={filters.maxPrice}
-              onChange={e => setFilters(f => ({ ...f, maxPrice: +e.target.value }))}
-              className="w-full accent-[#3ECFA0]" />
+            <div className="relative h-5 flex items-center">
+              <input type="range" min={0} max={20_000_000} step={250_000}
+                value={filters.minPrice}
+                onChange={e => setFilters(f => ({ ...f, minPrice: Math.min(+e.target.value, f.maxPrice - 250_000) }))}
+                className="absolute w-full accent-[#3ECFA0] pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto" />
+              <input type="range" min={0} max={20_000_000} step={250_000}
+                value={filters.maxPrice}
+                onChange={e => setFilters(f => ({ ...f, maxPrice: Math.max(+e.target.value, f.minPrice + 250_000) }))}
+                className="absolute w-full accent-[#3ECFA0] pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto" />
+            </div>
           </div>
 
           {/* Size */}
-          <div className="flex-1 min-w-48">
+          <div className="flex-1 min-w-56">
             <label className="text-xs text-slate-400 uppercase tracking-wider block mb-2">
               Størrelse: {filters.minSize} – {filters.maxSize} m²
             </label>
-            <input type="range" min={0} max={300} step={5}
-              value={filters.maxSize}
-              onChange={e => setFilters(f => ({ ...f, maxSize: +e.target.value }))}
-              className="w-full accent-[#3ECFA0]" />
+            <div className="relative h-5 flex items-center">
+              <input type="range" min={0} max={300} step={5}
+                value={filters.minSize}
+                onChange={e => setFilters(f => ({ ...f, minSize: Math.min(+e.target.value, f.maxSize - 5) }))}
+                className="absolute w-full accent-[#3ECFA0] pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto" />
+              <input type="range" min={0} max={300} step={5}
+                value={filters.maxSize}
+                onChange={e => setFilters(f => ({ ...f, maxSize: Math.max(+e.target.value, f.minSize + 5) }))}
+                className="absolute w-full accent-[#3ECFA0] pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto" />
+            </div>
           </div>
 
           {/* Reset */}

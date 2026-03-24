@@ -56,7 +56,7 @@ export default function Solgte() {
     fetchAll<SoldRecord>(
       'sold',
       'estate_id,address,zip_code,price,sold_date,size,rooms,sqm_price,price_change,municipality',
-      q => q.order('sold_date', { ascending: false })
+      q => q.neq('zip_code', 2900).order('sold_date', { ascending: false })
     ).then(data => { setRecords(data); setLoading(false) })
       .catch(e => { setError(e.message); setLoading(false) })
   }, [])
@@ -137,12 +137,21 @@ export default function Solgte() {
 
   const kpis = useMemo(() => {
     if (!filtered.length) return null
-    const sqmPrices = filtered.map(r => r.sqm_price).filter(Boolean)
-    const prices = filtered.map(r => r.price).filter(Boolean)
     const changes = filtered.map(r => r.price_change).filter(v => v != null)
+
+    const months = [...new Set(filtered.map(r => r.sold_date.slice(0, 7)))].sort()
+    const firstMonth = months[0]
+    const lastMonth = months[months.length - 1]
+    const sqmFirst = filtered.filter(r => r.sold_date.startsWith(firstMonth)).map(r => r.sqm_price).filter(Boolean)
+    const sqmLast  = filtered.filter(r => r.sold_date.startsWith(lastMonth)).map(r => r.sqm_price).filter(Boolean)
+    const avgSqmFirst = sqmFirst.reduce((s, v) => s + v, 0) / sqmFirst.length
+    const avgSqmLast  = sqmLast.reduce((s, v) => s + v, 0) / sqmLast.length
+
     return {
-      avgSqm: sqmPrices.reduce((s, v) => s + v, 0) / sqmPrices.length,
-      medianPrice: median(prices),
+      avgSqmFirst,
+      avgSqmLast,
+      firstMonth,
+      lastMonth,
       avgChange: changes.reduce((s, v) => s + v, 0) / changes.length,
     }
   }, [filtered])
@@ -201,13 +210,20 @@ export default function Solgte() {
           </div>
 
           {/* Size */}
-          <div className="flex-1 min-w-48">
+          <div className="flex-1 min-w-56">
             <label className="text-xs text-slate-400 uppercase tracking-wider block mb-2">
               Størrelse: {minSize}–{maxSize} m²
             </label>
-            <input type="range" min={0} max={300} step={5} value={maxSize}
-              onChange={e => setMaxSize(+e.target.value)}
-              className="w-full accent-[#3ECFA0]" />
+            <div className="relative h-5 flex items-center">
+              <input type="range" min={0} max={300} step={5}
+                value={minSize}
+                onChange={e => setMinSize(Math.min(+e.target.value, maxSize - 5))}
+                className="absolute w-full accent-[#3ECFA0] pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto" />
+              <input type="range" min={0} max={300} step={5}
+                value={maxSize}
+                onChange={e => setMaxSize(Math.max(+e.target.value, minSize + 5))}
+                className="absolute w-full accent-[#3ECFA0] pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto" />
+            </div>
           </div>
 
           <div className="flex items-end">
@@ -223,8 +239,8 @@ export default function Solgte() {
       {kpis && (
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: 'Gns. kr/m²', value: fmt(Math.round(kpis.avgSqm)) + ' kr' },
-            { label: 'Median salgspris', value: fmt(kpis.medianPrice) + ' kr' },
+            { label: `Gns. kr/m² (${kpis.firstMonth})`, value: fmt(Math.round(kpis.avgSqmFirst)) + ' kr' },
+            { label: `Gns. kr/m² (${kpis.lastMonth})`, value: fmt(Math.round(kpis.avgSqmLast)) + ' kr' },
             { label: 'Gns. prisændring', value: kpis.avgChange.toFixed(1) + ' %' },
           ].map(k => (
             <div key={k.label} className="bg-slate-800 rounded-lg p-4">
@@ -237,7 +253,7 @@ export default function Solgte() {
 
       {/* Chart */}
       <div className="bg-slate-800 rounded-lg p-4">
-        <h2 className="text-sm font-medium text-slate-300 mb-4">Gns. salgspris kr/m² pr. måned</h2>
+        <h2 className="text-sm font-medium text-slate-300 mb-4">Gns. salgspris kr/m² pr. måned — seneste {period}</h2>
         <ResponsiveContainer width="100%" height={320}>
           <LineChart data={chartDataWithTrend} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
@@ -265,14 +281,14 @@ export default function Solgte() {
         <table className="w-full text-sm">
           <thead className="bg-slate-800">
             <tr>
-              {['Adresse', 'Postnr', 'Solgt dato', 'Vær.', 'm²', 'Salgspris', 'kr/m²', 'Prisændring'].map(h => (
+              {['Adresse', 'Postnr', 'Solgt dato', 'Vær.', 'm²', 'Udbudspris', 'Salgspris', 'kr/m²', 'Prisændring'].map(h => (
                 <th key={h} className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-700">
             {filtered.length === 0 && (
-              <tr><td colSpan={8}><EmptyState /></td></tr>
+              <tr><td colSpan={9}><EmptyState /></td></tr>
             )}
             {filtered.slice(0, 200).map(r => (
               <tr key={r.estate_id} className="hover:bg-slate-800 transition-colors">
@@ -281,6 +297,7 @@ export default function Solgte() {
                 <td className="px-4 py-3 text-slate-400">{r.sold_date}</td>
                 <td className="px-4 py-3 text-slate-300">{r.rooms}</td>
                 <td className="px-4 py-3 text-slate-300">{r.size}</td>
+                <td className="px-4 py-3 text-slate-300">{r.price_change != null ? fmt(Math.round(r.price / (1 + r.price_change / 100))) : '—'}</td>
                 <td className="px-4 py-3 text-[#F5A623] font-medium">{fmt(r.price)}</td>
                 <td className="px-4 py-3 text-slate-300">{fmt(Math.round(r.sqm_price))}</td>
                 <td className={`px-4 py-3 font-medium ${r.price_change < 0 ? 'text-[#3ECFA0]' : 'text-red-400'}`}>

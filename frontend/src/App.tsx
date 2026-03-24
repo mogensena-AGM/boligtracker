@@ -3,6 +3,7 @@ import NavBar from './components/NavBar'
 import TilSalg from './views/TilSalg'
 import Solgte from './views/Solgte'
 import VoresLejlighed from './views/VoresLejlighed'
+import Liggetid from './views/Liggetid'
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
             <Route path="/" element={<Navigate to="/til-salg" replace />} />
             <Route path="/til-salg" element={<TilSalg />} />
             <Route path="/solgte" element={<Solgte />} />
+            <Route path="/liggetid" element={<Liggetid />} />
             <Route path="/vores-lejlighed" element={<VoresLejlighed />} />
           </Routes>
         </main>
